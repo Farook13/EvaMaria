@@ -36,6 +36,8 @@ DATABASE_URI = environ.get('DATABASE_URI', "mongodb+srv://pcmovies:pcmovies@clus
 DATABASE_NAME = environ.get('DATABASE_NAME', "pcmovies")
 COLLECTION_NAME = environ.get('COLLECTION_NAME', 'Telegram_files')
 
+PORT = int(environ.get('PORT', 8000))
+
 # Others
 LOG_CHANNEL = int(environ.get('LOG_CHANNEL', '-1002467149516'))
 SUPPORT_CHAT = environ.get('SUPPORT_CHAT', 'cineflix')
