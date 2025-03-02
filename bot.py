@@ -44,7 +44,7 @@ class Bot(Client):
         logging.info(LOG_STR)
 
     def run_flask():
-    app.run(host="0.0.0.0", port=8000)
+        app.run(host="0.0.0.0", port=8000)
 
     async def stop(self, *args):
         await super().stop()
