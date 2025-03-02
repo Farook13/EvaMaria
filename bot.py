@@ -1,5 +1,7 @@
 import logging
 import logging.config
+import asyncio
+from aiohttp import web
 
 # Get logging configurations
 logging.config.fileConfig('logging.conf')
@@ -15,6 +17,20 @@ from info import SESSION, API_ID, API_HASH, BOT_TOKEN, LOG_STR
 from utils import temp
 from typing import Union, Optional, AsyncGenerator
 from pyrogram import types
+
+# Health check handler
+async def health_check(request):
+    return web.Response(text="OK", status=200)
+
+# Setup HTTP server for health check
+async def start_health_server():
+    app = web.Application()
+    app.add_routes([web.get('/health', health_check)])
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 8000)
+    await site.start()
+    logging.info("Health check server started on port 8000.")
 
 class Bot(Client):
 
@@ -42,6 +58,8 @@ class Bot(Client):
         self.username = '@' + me.username
         logging.info(f"{me.first_name} with for Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
         logging.info(LOG_STR)
+        # Start the health check server after the bot starts
+        await start_health_server()
 
     async def stop(self, *args):
         await super().stop()
@@ -53,29 +71,6 @@ class Bot(Client):
         limit: int,
         offset: int = 0,
     ) -> Optional[AsyncGenerator["types.Message", None]]:
-        """Iterate through a chat sequentially.
-        This convenience method does the same as repeatedly calling :meth:`~pyrogram.Client.get_messages` in a loop, thus saving
-        you from the hassle of setting up boilerplate code. It is useful for getting the whole chat messages with a
-        single call.
-        Parameters:
-            chat_id (``int`` | ``str``):
-                Unique identifier (int) or username (str) of the target chat.
-                For your personal cloud (Saved Messages) you can simply use "me" or "self".
-                For a contact that exists in your Telegram address book you can use his phone number (str).
-                
-            limit (``int``):
-                Identifier of the last message to be returned.
-                
-            offset (``int``, *optional*):
-                Identifier of the first message to be returned.
-                Defaults to 0.
-        Returns:
-            ``Generator``: A generator yielding :obj:`~pyrogram.types.Message` objects.
-        Example:
-            .. code-block:: python
-                for message in app.iter_messages("pyrogram", 1, 15000):
-                    print(message.text)
-        """
         current = offset
         while True:
             new_diff = min(200, limit - current)
@@ -86,8 +81,6 @@ class Bot(Client):
                 yield message
                 current += 1
 
-def run_flask():
-        app.run(host="0.0.0.0", port=8000)
-
+# Run the bot
 app = Bot()
-app.run()
+app.run()l
